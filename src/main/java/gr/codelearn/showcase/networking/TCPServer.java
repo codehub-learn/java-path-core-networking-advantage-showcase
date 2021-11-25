@@ -13,6 +13,7 @@ import java.net.Socket;
 public class TCPServer {
     private static final Logger logger = LoggerFactory.getLogger(TCPServer.class);
     private final int port;
+    private boolean shutdown;
 
     public static void main(String[] args) {
         TCPServer tcpServer = new TCPServer(8080);
@@ -21,14 +22,17 @@ public class TCPServer {
 
     public TCPServer(int port) {
         this.port = port;
+        shutdown = false;
     }
 
     public void startServer() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            logger.info("Server with ip {} waiting for new connections at port {}",
-                    Util.getCorrectIp(),
-                    serverSocket.getLocalPort());
-            manageClientConnection(serverSocket);
+            while(!shutdown) {
+                logger.info("Server with ip {} waiting for new connections at port {}",
+                        Util.getCorrectIp(),
+                        serverSocket.getLocalPort());
+                manageClientConnection(serverSocket);
+            }
         } catch (IOException e) {
             logger.error("Unknown input output exception", e);
         }
@@ -48,6 +52,12 @@ public class TCPServer {
             if ("exit".equals(clientMessage)){
                 clientOutput.println("Good bye!");
                 logger.info("Closing connection with {}",clientConnectionSocket.getInetAddress());
+                break;
+            }
+            else if ("shutdown".equals(clientMessage)){
+                clientOutput.println("Server shutting down. Good bye!");
+                logger.info("Server shutdown from {}",clientConnectionSocket.getInetAddress());
+                shutdown = true;
                 break;
             }
             String serverResponse = clientMessage.toUpperCase();
