@@ -14,6 +14,11 @@ public class TCPServer {
     private static final Logger logger = LoggerFactory.getLogger(TCPServer.class);
     private final int port;
 
+    public static void main(String[] args) {
+        TCPServer tcpServer = new TCPServer(8080);
+        tcpServer.startServer();
+    }
+
     public TCPServer(int port) {
         this.port = port;
     }
@@ -21,7 +26,7 @@ public class TCPServer {
     public void startServer() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             logger.info("Server with ip {} waiting for new connections at port {}",
-                    serverSocket.getInetAddress().getHostAddress(),
+                    Util.getCorrectIp(),
                     serverSocket.getLocalPort());
             manageClientConnection(serverSocket);
         } catch (IOException e) {
@@ -40,6 +45,11 @@ public class TCPServer {
         while(true){
             String clientMessage = clientInput.readLine();
             logger.info("Message received: {}",clientMessage);
+            if ("exit".equals(clientMessage)){
+                clientOutput.println("Good bye!");
+                logger.info("Closing connection with {}",clientConnectionSocket.getInetAddress());
+                break;
+            }
             String serverResponse = clientMessage.toUpperCase();
             clientOutput.println(serverResponse);
         }
